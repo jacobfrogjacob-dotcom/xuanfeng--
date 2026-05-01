@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玄封電競模板</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
     * { margin:0; padding:0; box-sizing: border-box; }
     body { font-family: 'Microsoft JhengHei', sans-serif; background: #0a0a1a; color: #fff; min-height: 100vh; }
@@ -49,8 +48,6 @@
     .fighter-option { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
     .fighter-option input { width: auto; margin: 0; }
     .booking-count { color: #aaa; font-size: 0.9rem; }
-    .qr-upload-area { background: #0a0a1a; border: 2px dashed #333; border-radius: 8px; padding: 2rem; text-align: center; }
-    .qr-preview { margin-top: 1rem; }
 
     .admin-page, .fighter-portal { padding: 3rem 2rem; }
     .admin-page h2, .fighter-portal h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
@@ -76,9 +73,7 @@
 
     .data-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
     .alert-box { background: #2a2a3e; border-left: 4px solid #00d4ff; padding: 1rem; margin-bottom: 1rem; }
-    .qr-image { max-width: 200px; max-height: 200px; margin-top: 0.5rem; border-radius: 4px; }
     
-    /* 打手登录 */
     .login-container { max-width: 400px; margin: 5rem auto; }
     .fighter-order-card { background: #1a1a2e; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #00d4ff; }
     .fighter-order-card.pending { border-left-color: #ffaa00; }
@@ -126,18 +121,6 @@
 <div id="fighter-portal-view" class="container fighter-portal hidden">
   <h2 id="fighter-portal-title">打手專區</h2>
   
-  <!-- 收款QR码设置 -->
-  <div class="card" style="max-width:500px; margin:0 auto 2rem;">
-    <h3 style="color:#00d4ff; margin-bottom:1rem;">我的收款QR碼</h3>
-    <p style="color:#aaa; font-size:0.9rem; margin-bottom:1rem;">上傳QR碼讓客戶掃碼付款</p>
-    <div class="qr-upload-area">
-      <input type="file" id="fighter-qr-upload" accept="image/*" onchange="handleFighterQRUpload(event)" style="display:none;">
-      <button type="button" class="btn btn-warning" onclick="document.getElementById('fighter-qr-upload').click()">上傳QR碼</button>
-      <div id="fighter-qr-preview" class="qr-preview"></div>
-      <p id="fighter-qr-status" style="margin-top:0.5rem;"></p>
-    </div>
-  </div>
-
   <!-- 我的订单 -->
   <div class="admin-section">
     <h3>我的訂單</h3>
@@ -156,32 +139,13 @@
   <form id="order-form">
     <div class="form-group">
       <label>選擇服務</label>
-      <select id="order-product" onchange="checkProductType()" required></select>
+      <select id="order-product" required></select>
     </div>
     <div class="form-group">
       <label>聯絡資料</label>
       <input type="text" id="customer-name" placeholder="您的姓名" required>
       <input type="tel" id="customer-phone" placeholder="聯絡電話" required>
     </div>
-    
-    <!-- 代打QR码上传 -->
-    <div id="qr-upload-group" class="form-group hidden">
-      <label>上傳遊戲QR碼（代打必填）</label>
-      <div class="qr-upload-area">
-        <input type="file" id="customer-qr-upload" accept="image/*" onchange="handleCustomerQRUpload(event)" style="display:none;">
-        <button type="button" class="btn btn-warning" onclick="document.getElementById('customer-qr-upload').click()">選擇QR碼圖片</button>
-        <p style="color:#aaa; font-size:0.9rem; margin-top:0.5rem;">請上傳包含QR碼的圖片，系統將自動檢測</p>
-        <div id="customer-qr-preview" class="qr-preview"></div>
-        <p id="customer-qr-status" style="margin-top:0.5rem;"></p>
-      </div>
-    </div>
-
-    <!-- 查看打手QR码 -->
-    <div id="fighter-qr-display" class="form-group hidden">
-      <label>打手收款QR碼（掃碼付款）</label>
-      <div id="fighter-qr-code"></div>
-    </div>
-
     <div class="form-group">
       <label>打手配置</label>
       <select id="fighter-type" onchange="toggleFighterSelect()">
@@ -249,7 +213,7 @@
         </select>
         <label>價格 (NT$)</label>
         <input type="number" id="new-product-price" placeholder="例如：500" required>
-        <label>商品圖片（可選，护航用）</label>
+        <label>商品圖片（可選）</label>
         <input type="url" id="new-product-img" placeholder="https://example.com/image.jpg">
         <label>商品描述</label>
         <textarea id="new-product-desc" rows="3" placeholder="服務內容描述"></textarea>
@@ -296,9 +260,6 @@
 
 <script>
   let currentFighterId = null
-  let uploadedCustomerQR = null
-  let currentProductType = ''
-  let currentFighterQR = null
 
   // ===== 存储逻辑 =====
   let memoryDB = { fighters: null, products: null, orders: null, games: null }
@@ -324,7 +285,7 @@
     }
     if (!loadFromStorage('fighters')) {
       saveToStorage('fighters', Array.from({length:5}, (_,i) => ({
-        id: i+1, name: `打手${i+1}`, allowBooking: true, maxBookings: 5, currentBookings: 0, qrCode: null
+        id: i+1, name: `打手${i+1}`, allowBooking: true, maxBookings: 5, currentBookings: 0
       })))
     }
     if (!loadFromStorage('products')) saveToStorage('products', [])
@@ -379,22 +340,13 @@
     showView('fighter-portal', fighterId)
   })
 
+  // ===== 打手专区渲染 =====
   function renderFighterPortal(fighterId) {
     currentFighterId = fighterId
     const fighters = getFighters()
     const fighter = fighters.find(f => f.id === fighterId)
     
     document.getElementById('fighter-portal-title').textContent = `${fighter.name} 專區`
-    
-    // 显示收款QR码
-    const qrPreview = document.getElementById('fighter-qr-preview')
-    if (fighter.qrCode) {
-      qrPreview.innerHTML = `<img src="${fighter.qrCode}" class="qr-image">`
-      document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#00ff88;">✓ 已上傳收款QR碼</span>'
-    } else {
-      qrPreview.innerHTML = ''
-      document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#ffaa00;">尚未上傳收款QR碼</span>'
-    }
     
     // 显示订单
     const orders = getOrders().filter(o => o.assignedFighters.includes(fighterId))
@@ -409,7 +361,6 @@
             <div><strong>訂單號：</strong>${o.id} <strong style="margin-left:1rem;">時間：</strong>${o.time}</div>
             <div style="margin-top:0.5rem;"><strong>客戶：</strong>${o.customerName} <strong style="margin-left:1rem;">電話：</strong>${o.customerPhone}</div>
             <div style="margin-top:0.5rem;"><strong>服務：</strong>${product?.name || '未知'} (${product?.type || ''}) <strong style="margin-left:1rem;">價格：</strong><span style="color:#00ff88;">NT$ ${product?.price || 0}</span></div>
-            ${o.customerQR ? `<div style="margin-top:0.5rem;"><strong>客戶QR碼：</strong><br><img src="${o.customerQR}" style="width:100px;height:100px;object-fit:cover;border-radius:4px;margin-top:0.5rem;"></div>` : ''}
             <div style="margin-top:1rem;">
               <strong>狀態：</strong><span style="color:${o.status === '已完成' ? '#00ff88' : '#ffaa00'};">${o.status}</span>
               ${o.status !== '已完成' ? `<button class="btn btn-sm btn-success" style="margin-left:1rem;" onclick="completeOrder(${o.id})">標記完成</button>` : ''}
@@ -418,39 +369,6 @@
         `
       }).join('')
     }
-  }
-
-  // 打手上傳收款QR码
-  function handleFighterQRUpload(event) {
-    const file = event.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = function(e) {
-      const img = new Image()
-      img.onload = function() {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx.drawImage(img, 0, 0)
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
-        if (qrCode) {
-          const fighters = getFighters()
-          const fighter = fighters.find(f => f.id === currentFighterId)
-          fighter.qrCode = e.target.result
-          saveFighters(fighters)
-          document.getElementById('fighter-qr-preview').innerHTML = `<img src="${e.target.result}" class="qr-image">`
-          document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#00ff88;">✓ QR碼上傳成功</span>'
-          alert('收款QR碼上傳成功！')
-        } else {
-          document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#ff4444;">✗ 未檢測到QR碼，請重新上傳</span>'
-          event.target.value = ''
-        }
-      }
-      img.src = e.target.result
-    }
-    reader.readAsDataURL(file)
   }
 
   // 完成订单
@@ -498,53 +416,7 @@
     showView('order')
     setTimeout(() => { 
       document.getElementById('order-product').value = productId
-      checkProductType()
     }, 0)
-  }
-
-  // ===== 检查商品类型 =====
-  function checkProductType() {
-    const productId = parseInt(document.getElementById('order-product').value)
-    const product = getProducts().find(p => p.id === productId)
-    currentProductType = product?.type || ''
-    
-    document.getElementById('qr-upload-group').classList.toggle('hidden', currentProductType !== '代打')
-    
-    // 显示打手QR码
-    const fighterQRDisplay = document.getElementById('fighter-qr-display')
-    const selectedFighterId = getOrders().length > 0 ? null : null // 这里需要先选择打手
-    fighterQRDisplay.classList.add('hidden')
-  }
-
-  // ===== 客户QR码上传 =====
-  function handleCustomerQRUpload(event) {
-    const file = event.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = function(e) {
-      const img = new Image()
-      img.onload = function() {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx.drawImage(img, 0, 0)
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
-        if (qrCode) {
-          uploadedCustomerQR = e.target.result
-          document.getElementById('customer-qr-preview').innerHTML = `<img src="${e.target.result}" class="qr-image">`
-          document.getElementById('customer-qr-status').innerHTML = '<span style="color:#00ff88;">✓ QR碼檢測成功</span>'
-        } else {
-          uploadedCustomerQR = null
-          document.getElementById('customer-qr-preview').innerHTML = ''
-          document.getElementById('customer-qr-status').innerHTML = '<span style="color:#ff4444;">✗ 未檢測到QR碼，請重新上傳</span>'
-          event.target.value = ''
-        }
-      }
-      img.src = e.target.result
-    }
-    reader.readAsDataURL(file)
   }
 
   // ===== 下单表单 =====
@@ -555,10 +427,6 @@
     productSelect.innerHTML = products.map(p => 
       `<option value="${p.id}">${p.name} (NT$ ${p.price})</option>`
     ).join('')
-    
-    uploadedCustomerQR = null
-    document.getElementById('customer-qr-preview').innerHTML = ''
-    document.getElementById('customer-qr-status').innerHTML = ''
     
     const availableFighters = fighters.filter(f => f.allowBooking && f.currentBookings < f.maxBookings)
     const fighterOptions = document.getElementById('fighter-options')
@@ -607,10 +475,6 @@
     const fighterType = document.getElementById('fighter-type').value
     const fighters = getFighters()
     
-    if (product.type === '代打' && !uploadedCustomerQR) {
-      return alert('代打商品請上傳QR碼')
-    }
-    
     let assignedFighters = []
     if (fighterType === 'random') {
       const available = fighters.filter(f => f.allowBooking && f.currentBookings < f.maxBookings)
@@ -636,7 +500,6 @@
       customerPhone,
       fighterType,
       assignedFighters,
-      customerQR: uploadedCustomerQR,
       status: '已付款',
       time: new Date().toLocaleString()
     })
@@ -673,7 +536,6 @@
           <div class="fighter-meta" style="margin-top:0.5rem;">
             <span class="badge ${f.allowBooking ? 'badge-allowed' : 'badge-disallowed'}">${f.allowBooking ? '开放预约' : '不开放'}</span>
             <span style="color:#aaa;font-size:0.9rem;">${f.currentBookings}/${f.maxBookings} 人预约</span>
-            ${f.qrCode ? '<span style="color:#00ff88;font-size:0.8rem;">✓ 已上传收款码</span>' : ''}
           </div>
         </div>
         <button class="btn btn-sm btn-warning" onclick="showView('fighter-settings', ${f.id})">详细设置</button>
@@ -709,7 +571,6 @@
             <div><strong>订单号：</strong>${o.id} <strong style="margin-left:1rem;">时间：</strong>${o.time} <strong style="margin-left:1rem;">状态：</strong><span style="color:${o.status === '已完成' ? '#00ff88' : '#ffaa00'};">${o.status}</span></div>
             <div style="margin-top:0.5rem;"><strong>客户：</strong>${o.customerName} <strong style="margin-left:1rem;">电话：</strong>${o.customerPhone}</div>
             <div style="margin-top:0.5rem;"><strong>服务：</strong>${product?.name || '未知'} (${product?.type || ''}) <strong style="margin-left:1rem;">打手：</strong>${fighterNames}</div>
-            ${o.customerQR ? `<div style="margin-top:0.5rem;"><strong>客户QR码：</strong><br><img src="${o.customerQR}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;margin-top:0.5rem;"></div>` : ''}
           </div>
         `
       }).join('')
