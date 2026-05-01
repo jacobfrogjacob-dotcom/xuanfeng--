@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>玄封電競模板</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Microsoft JhengHei', sans-serif; background: #0a0a1a; color: #fff; min-height: 100vh; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+    .btn { padding: 0.6rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .btn-primary { background: #00d4ff; color: #000; }
+    .btn-danger { background: #ff4444; color: #fff; }
+    .btn-success { background: #00ff88; color: #000; }
+    .btn-warning { background: #ffaa00; color: #000; }
+    .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.9rem; }
+    .hidden { display: none !important; }
+    .card { background: #1a1a2e; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+    .badge { padding: 0.2rem 0.8rem; border-radius: 12px; font-size: 0.8rem; }
+    .badge-allowed { background: #00d4ff; color: #000; }
+    .badge-disallowed { background: #666; color: #fff; }
+    input, select, textarea { padding: 0.6rem; border-radius: 4px; border: 1px solid #333; background: #0a0a1a; color: #fff; width: 100%; margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: #aaa; }
+
+    .site-header { background: #1a1a2e; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 1.5rem; font-weight: bold; color: #00d4ff; }
+    nav ul { display: flex; gap: 2rem; list-style: none; }
+    nav a { color: #fff; text-decoration: none; cursor: pointer; }
+    nav a:hover { color: #00d4ff; }
+
+    .hero { text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, #1a1a2e, #16213e); }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #00d4ff; }
+    .hero p { margin-bottom: 1rem; color: #aaa; }
+
+    .products { padding: 3rem 2rem; }
+    .products h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .product-card img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0; }
+    .product-card .info { padding: 1rem; }
+    .product-card h3 { color: #00d4ff; margin-bottom: 0.5rem; }
+    .product-card .price { font-size: 1.2rem; color: #00ff88; margin-bottom: 1rem; }
+
+    .order-page { padding: 3rem 2rem; max-width: 800px; margin: 0 auto; }
+    .order-page h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
+    .form-group { margin-bottom: 1.5rem; }
+    .fighter-option { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .fighter-option input { width: auto; margin: 0; }
+    .booking-count { color: #aaa; font-size: 0.9rem; }
+
+    .admin-page { padding: 3rem 2rem; }
+    .admin-page h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
+    .admin-section { margin-bottom: 3rem; }
+    .admin-section h3 { color: #00d4ff; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+    .fighter-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+    .fighter-item { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+    .fighter-meta { display: flex; gap: 0.5rem; align-items: center; }
+    .product-admin-list .item { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .product-admin-list img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
+    .order-admin-list .order-item { background: #1a1a2e; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; }
+    .order-item span { margin-right: 1rem; }
+
+    .fighter-settings { padding: 3rem 2rem; max-width: 600px; margin: 0 auto; }
+    .fighter-settings h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
+    .setting-group { margin-bottom: 2rem; }
+    .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+    .checkbox-label input { width: auto; }
+
+    .site-footer { background: #0a0a1a; padding: 2rem; text-align: center; margin-top: 3rem; }
+    .social-links { margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; }
+    .social-links a { color: #00d4ff; text-decoration: none; }
+
+    .data-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
+    .alert-box { background: #2a2a3e; border-left: 4px solid #00d4ff; padding: 1rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">玄封電競</div>
+  <nav>
+    <ul>
+      <li><a onclick="showView('frontend')">首頁</a></li>
+      <li><a onclick="showView('admin')">後台管理</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div id="frontend-view" class="container">
+  <section class="hero">
+    <h1>歡迎來到玄封電競</h1>
+    <p>最頂尖的電競陪玩服務平台</p>
+  </section>
+  <section class="products">
+    <h2>服務項目</h2>
+    <div id="product-list" class="product-grid"></div>
+  </section>
+</div>
+
+<div id="order-view" class="container order-page hidden">
+  <h2>下單預約</h2>
+  <form id="order-form">
+    <div class="form-group">
+      <label>選擇服務</label>
+      <select id="order-product" required></select>
+    </div>
+    <div class="form-group">
+      <label>聯絡資料</label>
+      <input type="text" id="customer-name" placeholder="您的姓名" required>
+      <input type="tel" id="customer-phone" placeholder="聯絡電話" required>
+    </div>
+    <div class="form-group">
+      <label>打手配置</label>
+      <select id="fighter-type" onchange="toggleFighterSelect()">
+        <option value="random">隨機分配打手</option>
+        <option value="1">指定1位打手</option>
+        <option value="2">指定2位打手</option>
+        <option value="3">指定3位打手</option>
+      </select>
+    </div>
+    <div id="fighter-select-group" class="form-group hidden">
+      <label id="fighter-select-label">選擇可預約打手（需選滿對應數量）</label>
+      <div id="fighter-options"></div>
+      <p id="fighter-warning" style="color:#ff4444; font-size:0.9rem; margin-top:0.5rem;"></p>
+    </div>
+    <button type="submit" class="btn btn-primary">確認下單並付款</button>
+    <button type="button" class="btn" onclick="showView('frontend')" style="margin-left:1rem;">返回</button>
+  </form>
+</div>
+
+<div id="admin-view" class="container admin-page hidden">
+  <h2>後台管理系統</h2>
+  
+  <div class="alert-box">
+    <p>💡 提示：由於瀏覽器安全限制，建議使用「導出數據」功能定期備份資料。</p>
+    <div class="data-actions">
+      <button class="btn btn-sm btn-warning" onclick="exportData()">導出數據</button>
+      <button class="btn btn-sm btn-success" onclick="document.getElementById('import-file').click()">導入數據</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-sm btn-danger" onclick="resetAllData()">重置所有數據</button>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h3>打手管理</h3>
+    <div id="fighter-admin-list" class="fighter-list"></div>
+  </div>
+
+  <div class="admin-section">
+    <h3>商品管理</h3>
+    <div class="card">
+      <h4>新增商品</h4>
+      <form id="add-product-form">
+        <label>商品名稱</label>
+        <input type="text" id="new-product-name" placeholder="例如：英雄聯盟鑽石局陪玩" required>
+        <label>價格 (NT$)</label>
+        <input type="number" id="new-product-price" placeholder="例如：500" required>
+        <label>圖片連結</label>
+        <input type="url" id="new-product-img" placeholder="https://example.com/image.jpg" required>
+        <label>商品描述</label>
+        <textarea id="new-product-desc" rows="3" placeholder="服務內容描述"></textarea>
+        <button type="submit" class="btn btn-primary">新增商品</button>
+      </form>
+    </div>
+    <div id="product-admin-list" class="product-admin-list" style="margin-top:2rem;"></div>
+  </div>
+
+  <div class="admin-section">
+    <h3>預約訂單</h3>
+    <div id="order-admin-list"></div>
+  </div>
+</div>
+
+<div id="fighter-settings-view" class="container fighter-settings hidden">
+  <h2 id="fighter-settings-title">打手設定</h2>
+  <div class="card">
+    <div class="setting-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="allow-booking-checkbox">
+        開放預約（允許客戶指定我）
+      </label>
+    </div>
+    <div class="setting-group">
+      <label>最大可預約人數</label>
+      <input type="number" id="max-bookings-input" min="1" max="20" value="5">
+      <p style="color:#aaa; font-size:0.9rem;">當前已預約：<span id="current-bookings">0</span> 人</p>
+    </div>
+    <button class="btn btn-primary" onclick="saveFighterSettings()">保存設置</button>
+    <button class="btn" onclick="showView('admin')" style="margin-left:1rem;">返回後台</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>&copy; 2026 玄封電競. All rights reserved.</p>
+  <div class="social-links">
+    <a href="#">FB</a>
+    <a href="#">IG</a>
+    <a href="#">YT</a>
+  </div>
+</footer>
+
+<script>
+  let currentFighterId = null
+
+  // ===== 数据存储（优先使用localStorage，失败则用内存）=====
+  let memoryDB = { fighters: null, products: null, orders: null }
+
+  function saveToStorage(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify(data))
+    } catch(e) {}
+    memoryDB[key] = data
+  }
+
+  function loadFromStorage(key) {
+    try {
+      const data = localStorage.getItem(key)
+      if (data) return JSON.parse(data)
+    } catch(e) {}
+    return memoryDB[key] || null
+  }
+
+  // ===== 数据初始化 =====
+  function initData() {
+    if (!loadFromStorage('fighters')) {
+      const fighters = Array.from({length:5}, (_,i) => ({
+        id: i+1,
+        name: `打手${i+1}`,
+        allowBooking: true,
+        maxBookings: 5,
+        currentBookings: 0
+      }))
+      saveToStorage('fighters', fighters)
+    }
+    if (!loadFromStorage('products')) {
+      saveToStorage('products', [])
+    }
+    if (!loadFromStorage('orders')) {
+      saveToStorage('orders', [])
+    }
+  }
+
+  // ===== 数据操作 =====
+  function getFighters() { return loadFromStorage('fighters') || [] }
+  function getProducts() { return loadFromStorage('products') || [] }
+  function getOrders() { return loadFromStorage('orders') || [] }
+  function saveFighters(data) { saveToStorage('fighters', data) }
+  function saveProducts(data) { saveToStorage('products', data) }
+  function saveOrders(data) { saveToStorage('orders', data) }
+
+  // ===== 视图切换 =====
+  function showView(view, params = {}) {
+    document.querySelectorAll('[id$="-view"]').forEach(el => el.classList.add('hidden'))
+    if (view === 'frontend') {
+      document.getElementById('frontend-view').classList.remove('hidden')
+      renderProducts()
+    } else if (view === 'order') {
+      document.getElementById('order-view').classList.remove('hidden')
+      renderOrderForm()
+    } else if (view === 'admin') {
+      document.getElementById('admin-view').classList.remove('hidden')
+      renderAdmin()
+    } else if (view === 'fighter-settings') {
+      document.getElementById('fighter-settings-view').classList.remove('hidden')
+      openFighterSettings(params.fighterId || params)
+    }
+  }
+
+  // ===== 前端商品渲染 =====
+  function renderProducts() {
+    const products = getProducts()
+    const container = document.getElementById('product-list')
+    if (products.length === 0) {
+      container.innerHTML = '<p style="text-align:center;grid-column:1/-1;color:#aaa;">暫無服務項目，請至後台新增</p>'
+      return
+    }
+    container.innerHTML = products.map(p => `
+      <div class="product-card card">
+        <img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/280x160?text=No+Image'">
+        <div class="info">
+          <h3>${p.name}</h3>
+          <p style="color:#aaa;font-size:0.9rem;margin-bottom:1rem;">${p.desc || '暂无描述'}</p>
+          <div class="price">NT$ ${p.price}</div>
+          <button class="btn btn-primary" onclick="openOrder(${p.id})">立即下單</button>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  function openOrder(productId) {
+    showView('order')
+    setTimeout(() => {
+      document.getElementById('order-product').value = productId
+    }, 0)
+  }
+
+  // ===== 下单表单 =====
+  function renderOrderForm() {
+    const products = getProducts()
+    const fighters = getFighters()
+    const productSelect = document.getElementById('order-product')
+    productSelect.innerHTML = products.map(p => 
+      `<option value="${p.id}">${p.name} (NT$ ${p.price})</option>`
+    ).join('')
+    
+    // 过滤可预约打手：开放预约 + 未满员
+    const availableFighters = fighters.filter(f => 
+      f.allowBooking && f.currentBookings < f.maxBookings
+    )
+    
+    const fighterOptions = document.getElementById('fighter-options')
+    if (availableFighters.length === 0) {
+      fighterOptions.innerHTML = '<p style="color:#aaa;">暂无可预约打手。请至后台开启打手预约权限。</p>'
+    } else {
+      fighterOptions.innerHTML = availableFighters.map(f => `
+        <div class="fighter-option">
+          <input type="checkbox" id="fighter-${f.id}" value="${f.id}" class="fighter-checkbox" onchange="checkFighterQuota(${f.id})">
+          <label for="fighter-${f.id}" style="margin:0;">
+            ${f.name} 
+            <span class="booking-count">(${f.currentBookings}/${f.maxBookings})</span>
+          </label>
+        </div>
+      `).join('')
+    }
+    toggleFighterSelect()
+  }
+
+  function checkFighterQuota(fighterId) {
+    const fighters = getFighters()
+    const fighter = fighters.find(f => f.id === fighterId)
+    const warningEl = document.getElementById('fighter-warning')
+    if (fighter.currentBookings >= fighter.maxBookings) {
+      warningEl.textContent = `⚠️ ${fighter.name} 已达最大预约人数！`
+      document.getElementById(`fighter-${fighterId}`).checked = false
+    } else {
+      warningEl.textContent = ''
+    }
+  }
+
+  function toggleFighterSelect() {
+    const type = document.getElementById('fighter-type').value
+    const group = document.getElementById('fighter-select-group')
+    if (type === 'random') {
+      group.classList.add('hidden')
+    } else {
+      group.classList.remove('hidden')
+      group.querySelector('label').textContent = `選擇可預約打手（需選滿 ${type} 位）`
+    }
+  }
+
+  // ===== 提交订单 =====
+  document.getElementById('order-form').addEventListener('submit', function(e) {
+    e.preventDefault()
+    const productId = parseInt(document.getElementById('order-product').value)
+    const customerName = document.getElementById('customer-name').value
+    const customerPhone = document.getElementById('customer-phone').value
+    const fighterType = document.getElementById('fighter-type').value
+    const fighters = getFighters()
+    
+    let assignedFighters = []
+    if (fighterType === 'random') {
+      const availableFighters = fighters.filter(f => f.allowBooking && f.currentBookings < f.maxBookings)
+      if (availableFighters.length === 0) {
+        alert('当前无可用打手，无法随机分配')
+        return
+      }
+      assignedFighters = [availableFighters[Math.floor(Math.random() * availableFighters.length)].id]
+    } else {
+      const selectCount = parseInt(fighterType)
+      const checkboxes = document.querySelectorAll('.fighter-checkbox:checked')
+      if (checkboxes.length !== selectCount) {
+        alert(`请选择 ${selectCount} 位打手`)
+        return
+      }
+      assignedFighters = Array.from(checkboxes).map(cb => parseInt(cb.value))
+      for (const fid of assignedFighters) {
+        const f = fighters.find(f => f.id === fid)
+        if (f.currentBookings >= f.maxBookings) {
+          alert(`⚠️ ${f.name} 已达最大预约人数，请重新选择`)
+          return
+        }
+      }
+    }
+    
+    const orders = getOrders()
+    orders.push({
+      id: Date.now(),
+      productId,
+      customerName,
+      customerPhone,
+      fighterType,
+      assignedFighters,
+      status: '已付款',
+      time: new Date().toLocaleString()
+    })
+    saveOrders(orders)
+    
+    assignedFighters.forEach(fid => {
+      const f = fighters.find(f => f.id === fid)
+      f.currentBookings += 1
+    })
+    saveFighters(fighters)
+    
+    alert('下單成功！感謝您的預約')
+    showView('frontend')
+    this.reset()
+  })
+
+  // ===== 后台渲染 =====
+  function renderAdmin() {
+    const fighters = getFighters()
+    document.getElementById('fighter-admin-list').innerHTML = fighters.map(f => `
+      <div class="card fighter-item">
+        <div>
+          <strong>${f.name}</strong>
+          <div class="fighter-meta" style="margin-top:0.5rem;">
+            <span class="badge ${f.allowBooking ? 'badge-allowed' : 'badge-disallowed'}">
+              ${f.allowBooking ? '开放预约' : '不开放'}
+            </span>
+            <span style="color:#aaa;font-size:0.9rem;">
+              ${f.currentBookings}/${f.maxBookings} 人预约
+            </span>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-warning" onclick="showView('fighter-settings', ${f.id})">
+            详细设置
+          </button>
+        </div>
+      </div>
+    `).join('')
+    
+    const products = getProducts()
+    const productAdminList = document.getElementById('product-admin-list')
+    if (products.length === 0) {
+      productAdminList.innerHTML = '<p style="color:#aaa;">暂无商品</p>'
+    } else {
+      productAdminList.innerHTML = products.map(p => `
+        <div class="card item">
+          <img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/60x60?text=No+Image'">
+          <div style="flex:1;">
+            <h4 style="color:#00d4ff;">${p.name}</h4>
+            <p style="color:#00ff88;">NT$ ${p.price}</p>
+            <p style="color:#aaa;font-size:0.9rem;">${p.desc || '暂无描述'}</p>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-sm btn-warning" onclick="editProduct(${p.id})">修改圖片</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">刪除</button>
+          </div>
+        </div>
+      `).join('')
+    }
+    
+    const orders = getOrders()
+    const orderAdminList = document.getElementById('order-admin-list')
+    if (orders.length === 0) {
+      orderAdminList.innerHTML = '<p style="color:#aaa;">暂无订单</p>'
+    } else {
+      orderAdminList.innerHTML = orders.map(o => {
+        const product = getProducts().find(p => p.id === o.productId)
+        const fighterNames = o.assignedFighters.map(fid => 
+          getFighters().find(f => f.id === fid)?.name || '未知'
+        ).join(', ')
+        return `
+          <div class="order-item">
+            <div>
+              <strong>订单号：</strong><span>${o.id}</span>
+              <strong style="margin-left:1rem;">时间：</strong><span>${o.time}</span>
+              <strong style="margin-left:1rem;">状态：</strong><span style="color:#00ff88;">${o.status}</span>
+            </div>
+            <div style="margin-top:0.5rem;">
+              <strong>客户：</strong><span>${o.customerName}</span>
+              <strong style="margin-left:1rem;">电话：</strong><span>${o.customerPhone}</span>
+            </div>
+            <div style="margin-top:0.5rem;">
+              <strong>服务：</strong><span>${product?.name || '未知'}</span>
+              <strong style="margin-left:1rem;">指定打手：</strong><span>${fighterNames}</span>
+            </div>
+          </div>
+        `
+      }).join('')
+    }
+  }
+
+  // ===== 打手设置 =====
+  function openFighterSettings(fighterId) {
+    currentFighterId = fighterId
+    const fighters = getFighters()
+    const fighter = fighters.find(f => f.id === fighterId)
+    document.getElementById('fighter-settings-title').textContent = `${fighter.name} 設定`
+    document.getElementById('allow-booking-checkbox').checked = fighter.allowBooking
+    document.getElementById('max-bookings-input').value = fighter.maxBookings
+    document.getElementById('current-bookings').textContent = fighter.currentBookings
+  }
+
+  function saveFighterSettings() {
+    const fighters = getFighters()
+    const fighter = fighters.find(f => f.id === currentFighterId)
+    fighter.allowBooking = document.getElementById('allow-booking-checkbox').checked
+    fighter.maxBookings = parseInt(document.getElementById('max-bookings-input').value) || 5
+    saveFighters(fighters)
+    alert('设置保存成功！')
+    showView('admin')
+  }
+
+  // ===== 商品管理 =====
+  document.getElementById('add-product-form').addEventListener('submit', function(e) {
+    e.preventDefault()
+    const products = getProducts()
+    products.push({
+      id: Date.now(),
+      name: document.getElementById('new-product-name').value,
+      price: parseInt(document.getElementById('new-product-price').value),
+      img: document.getElementById('new-product-img').value,
+      desc: document.getElementById('new-product-desc').value
+    })
+    saveProducts(products)
+    this.reset()
+    renderAdmin()
+    alert('商品新增成功')
+  })
+
+  function editProduct(id) {
+    const products = getProducts()
+    const product = products.find(p => p.id === id)
+    const newImg = prompt('请输入新的图片链接：', product.img)
+    if (newImg) {
+      product.img = newImg
+      saveProducts(products)
+      renderAdmin()
+    }
+  }
+
+  function deleteProduct(id) {
+    if (confirm('确定要删除这个商品吗？')) {
+      const products = getProducts().filter(p => p.id !== id)
+      saveProducts(products)
+      renderAdmin()
+      renderProducts()
+    }
+  }
+
+  // ===== 数据导入导出 =====
+  function exportData() {
+    const data = {
+      fighters: getFighters(),
+      products: getProducts(),
+      orders: getOrders()
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'})
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `玄封電競備份_${new Date().toISOString().slice(0,10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    alert('數據已導出！請妥善保存此JSON文件。')
+  }
+
+  function importData(event) {
+    const file = event.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result)
+        if (data.fighters) saveFighters(data.fighters)
+        if (data.products) saveProducts(data.products)
+        if (data.orders) saveOrders(data.orders)
+        alert('數據導入成功！')
+        renderAdmin()
+        renderProducts()
+      } catch(err) {
+        alert('導入失敗：文件格式錯誤')
+      }
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }
+
+  function resetAllData() {
+    if (confirm('確定要重置所有數據嗎？')) {
+      localStorage.clear()
+      memoryDB = { fighters: null, products: null, orders: null }
+      initData()
+      renderAdmin()
+      renderProducts()
+      alert('數據已重置')
+    }
+  }
+
+  // ===== 初始化 =====
+  window.addEventListener('load', function() {
+    initData()
+    showView('frontend')
+  })
+</script>
+
+</body>
+</html>
