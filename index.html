@@ -6,7 +6,7 @@
   <title>玄封電競模板</title>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin:0; padding:0; box-sizing: border-box; }
     body { font-family: 'Microsoft JhengHei', sans-serif; background: #0a0a1a; color: #fff; min-height: 100vh; }
     
     .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
@@ -49,9 +49,11 @@
     .fighter-option { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
     .fighter-option input { width: auto; margin: 0; }
     .booking-count { color: #aaa; font-size: 0.9rem; }
+    .qr-upload-area { background: #0a0a1a; border: 2px dashed #333; border-radius: 8px; padding: 2rem; text-align: center; }
+    .qr-preview { margin-top: 1rem; }
 
-    .admin-page { padding: 3rem 2rem; }
-    .admin-page h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
+    .admin-page, .fighter-portal { padding: 3rem 2rem; }
+    .admin-page h2, .fighter-portal h2 { text-align: center; margin-bottom: 2rem; color: #00d4ff; }
     .admin-section { margin-bottom: 3rem; }
     .admin-section h3 { color: #00d4ff; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
     .fighter-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
@@ -74,7 +76,13 @@
 
     .data-actions { margin-top: 1rem; display: flex; gap: 0.5rem; }
     .alert-box { background: #2a2a3e; border-left: 4px solid #00d4ff; padding: 1rem; margin-bottom: 1rem; }
-    #qrcode-preview img { margin-top: 0.5rem; }
+    .qr-image { max-width: 200px; max-height: 200px; margin-top: 0.5rem; border-radius: 4px; }
+    
+    /* 打手登录 */
+    .login-container { max-width: 400px; margin: 5rem auto; }
+    .fighter-order-card { background: #1a1a2e; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #00d4ff; }
+    .fighter-order-card.pending { border-left-color: #ffaa00; }
+    .fighter-order-card.done { border-left-color: #00ff88; }
   </style>
 </head>
 <body>
@@ -84,11 +92,13 @@
   <nav>
     <ul>
       <li><a onclick="showView('frontend')">首頁</a></li>
+      <li><a onclick="showView('fighter-login')">打手專區</a></li>
       <li><a onclick="showView('admin')">後台管理</a></li>
     </ul>
   </nav>
 </header>
 
+<!-- 前端主页 -->
 <div id="frontend-view" class="container">
   <section class="hero">
     <h1>歡迎來到玄封電競</h1>
@@ -100,18 +110,78 @@
   </section>
 </div>
 
+<!-- 打手登录页 -->
+<div id="fighter-login-view" class="container login-container hidden">
+  <div class="card">
+    <h2 style="text-align:center; margin-bottom:1.5rem; color:#00d4ff;">打手登入</h2>
+    <form id="fighter-login-form">
+      <label>選擇打手</label>
+      <select id="fighter-select" required></select>
+      <button type="submit" class="btn btn-primary" style="width:100%;">登入</button>
+    </form>
+  </div>
+</div>
+
+<!-- 打手专区 -->
+<div id="fighter-portal-view" class="container fighter-portal hidden">
+  <h2 id="fighter-portal-title">打手專區</h2>
+  
+  <!-- 收款QR码设置 -->
+  <div class="card" style="max-width:500px; margin:0 auto 2rem;">
+    <h3 style="color:#00d4ff; margin-bottom:1rem;">我的收款QR碼</h3>
+    <p style="color:#aaa; font-size:0.9rem; margin-bottom:1rem;">上傳QR碼讓客戶掃碼付款</p>
+    <div class="qr-upload-area">
+      <input type="file" id="fighter-qr-upload" accept="image/*" onchange="handleFighterQRUpload(event)" style="display:none;">
+      <button type="button" class="btn btn-warning" onclick="document.getElementById('fighter-qr-upload').click()">上傳QR碼</button>
+      <div id="fighter-qr-preview" class="qr-preview"></div>
+      <p id="fighter-qr-status" style="margin-top:0.5rem;"></p>
+    </div>
+  </div>
+
+  <!-- 我的订单 -->
+  <div class="admin-section">
+    <h3>我的訂單</h3>
+    <div id="fighter-orders-list"></div>
+  </div>
+
+  <div style="text-align:center; margin-top:2rem;">
+    <button class="btn btn-danger" onclick="fighterLogout()">登出</button>
+    <button class="btn" onclick="showView('frontend')" style="margin-left:1rem;">返回首頁</button>
+  </div>
+</div>
+
+<!-- 下单页 -->
 <div id="order-view" class="container order-page hidden">
   <h2>下單預約</h2>
   <form id="order-form">
     <div class="form-group">
       <label>選擇服務</label>
-      <select id="order-product" required></select>
+      <select id="order-product" onchange="checkProductType()" required></select>
     </div>
     <div class="form-group">
       <label>聯絡資料</label>
       <input type="text" id="customer-name" placeholder="您的姓名" required>
       <input type="tel" id="customer-phone" placeholder="聯絡電話" required>
     </div>
+    
+    <!-- 代打QR码上传 -->
+    <div id="qr-upload-group" class="form-group hidden">
+      <label>上傳遊戲QR碼（代打必填）</label>
+      <div class="qr-upload-area">
+        <input type="file" id="customer-qr-upload" accept="image/*" onchange="handleCustomerQRUpload(event)" style="display:none;">
+        <button type="button" class="btn btn-warning" onclick="document.getElementById('customer-qr-upload').click()">選擇QR碼圖片</button>
+        <p style="color:#aaa; font-size:0.9rem; margin-top:0.5rem;">請上傳包含QR碼的圖片，系統將自動檢測</p>
+        <div id="customer-qr-preview" class="qr-preview"></div>
+        <p id="customer-qr-status" style="margin-top:0.5rem;"></p>
+      </div>
+    </div>
+
+    <!-- 查看打手QR码 -->
+    <div id="fighter-qr-display" class="form-group hidden">
+      <label>打手收款QR碼（掃碼付款）</label>
+      <div id="fighter-qr-code"></div>
+    </div>
+
     <div class="form-group">
       <label>打手配置</label>
       <select id="fighter-type" onchange="toggleFighterSelect()">
@@ -131,6 +201,7 @@
   </form>
 </div>
 
+<!-- 后台管理 -->
 <div id="admin-view" class="container admin-page hidden">
   <h2>後台管理系統</h2>
   
@@ -144,7 +215,6 @@
     </div>
   </div>
 
-  <!-- 遊戲分類管理 -->
   <div class="admin-section">
     <h3>遊戲分類管理</h3>
     <div class="card">
@@ -158,13 +228,11 @@
     <div id="game-admin-list" class="game-admin-list" style="margin-top:2rem;"></div>
   </div>
 
-  <!-- 打手管理 -->
   <div class="admin-section">
     <h3>打手管理</h3>
     <div id="fighter-admin-list" class="fighter-list"></div>
   </div>
 
-  <!-- 商品管理 -->
   <div class="admin-section">
     <h3>商品管理</h3>
     <div class="card">
@@ -175,26 +243,16 @@
         <label>所屬遊戲</label>
         <select id="new-product-game" required></select>
         <label>商品種類</label>
-        <select id="new-product-type" onchange="toggleProductType()">
+        <select id="new-product-type">
           <option value="代打">代打</option>
           <option value="护航">护航</option>
         </select>
         <label>價格 (NT$)</label>
         <input type="number" id="new-product-price" placeholder="例如：500" required>
+        <label>商品圖片（可選，护航用）</label>
+        <input type="url" id="new-product-img" placeholder="https://example.com/image.jpg">
         <label>商品描述</label>
         <textarea id="new-product-desc" rows="3" placeholder="服務內容描述"></textarea>
-        <div id="image-input-group">
-          <div id="daida-image-input">
-            <label>上傳QR碼圖片（代打必填）</label>
-            <input type="file" id="qrcode-upload" accept="image/*" onchange="handleQRUpload(event)">
-            <p style="color:#aaa; font-size:0.9rem;">請上傳包含QR碼的圖片，系統將自動檢測</p>
-            <div id="qrcode-preview"></div>
-          </div>
-          <div id="huohang-image-input" class="hidden">
-            <label>商品圖片（可選）</label>
-            <input type="url" id="new-product-img" placeholder="https://example.com/image.jpg">
-          </div>
-        </div>
         <button type="submit" class="btn btn-primary" style="margin-top:1rem;">新增商品</button>
       </form>
     </div>
@@ -207,6 +265,7 @@
   </div>
 </div>
 
+<!-- 打手设置页 -->
 <div id="fighter-settings-view" class="container fighter-settings hidden">
   <h2 id="fighter-settings-title">打手設定</h2>
   <div class="card">
@@ -237,9 +296,11 @@
 
 <script>
   let currentFighterId = null
-  let uploadedQRBase64 = null
+  let uploadedCustomerQR = null
+  let currentProductType = ''
+  let currentFighterQR = null
 
-  // ===== 存儲邏輯 =====
+  // ===== 存储逻辑 =====
   let memoryDB = { fighters: null, products: null, orders: null, games: null }
   function saveToStorage(key, data) {
     try { localStorage.setItem(key, JSON.stringify(data)) } catch(e) {}
@@ -252,7 +313,7 @@
     } catch(e) { return memoryDB[key] || null }
   }
 
-  // ===== 數據初始化 =====
+  // ===== 数据初始化 =====
   function initData() {
     if (!loadFromStorage('games')) {
       saveToStorage('games', [
@@ -263,14 +324,14 @@
     }
     if (!loadFromStorage('fighters')) {
       saveToStorage('fighters', Array.from({length:5}, (_,i) => ({
-        id: i+1, name: `打手${i+1}`, allowBooking: true, maxBookings: 5, currentBookings: 0
+        id: i+1, name: `打手${i+1}`, allowBooking: true, maxBookings: 5, currentBookings: 0, qrCode: null
       })))
     }
     if (!loadFromStorage('products')) saveToStorage('products', [])
     if (!loadFromStorage('orders')) saveToStorage('orders', [])
   }
 
-  // ===== 數據操作 =====
+  // ===== 数据操作 =====
   const getGames = () => loadFromStorage('games') || []
   const getFighters = () => loadFromStorage('fighters') || []
   const getProducts = () => loadFromStorage('products') || []
@@ -280,12 +341,18 @@
   const saveProducts = (d) => saveToStorage('products', d)
   const saveOrders = (d) => saveToStorage('orders', d)
 
-  // ===== 視圖切換 =====
+  // ===== 视图切换 =====
   function showView(view, params = {}) {
     document.querySelectorAll('[id$="-view"]').forEach(el => el.classList.add('hidden'))
     if (view === 'frontend') {
       document.getElementById('frontend-view').classList.remove('hidden')
       renderProducts()
+    } else if (view === 'fighter-login') {
+      document.getElementById('fighter-login-view').classList.remove('hidden')
+      renderFighterLogin()
+    } else if (view === 'fighter-portal') {
+      document.getElementById('fighter-portal-view').classList.remove('hidden')
+      renderFighterPortal(params)
     } else if (view === 'order') {
       document.getElementById('order-view').classList.remove('hidden')
       renderOrderForm()
@@ -296,6 +363,109 @@
       document.getElementById('fighter-settings-view').classList.remove('hidden')
       openFighterSettings(params.fighterId || params)
     }
+  }
+
+  // ===== 打手登录 =====
+  function renderFighterLogin() {
+    const fighters = getFighters()
+    document.getElementById('fighter-select').innerHTML = fighters.map(f => 
+      `<option value="${f.id}">${f.name}</option>`
+    ).join('')
+  }
+
+  document.getElementById('fighter-login-form').addEventListener('submit', function(e) {
+    e.preventDefault()
+    const fighterId = parseInt(document.getElementById('fighter-select').value)
+    showView('fighter-portal', fighterId)
+  })
+
+  function renderFighterPortal(fighterId) {
+    currentFighterId = fighterId
+    const fighters = getFighters()
+    const fighter = fighters.find(f => f.id === fighterId)
+    
+    document.getElementById('fighter-portal-title').textContent = `${fighter.name} 專區`
+    
+    // 显示收款QR码
+    const qrPreview = document.getElementById('fighter-qr-preview')
+    if (fighter.qrCode) {
+      qrPreview.innerHTML = `<img src="${fighter.qrCode}" class="qr-image">`
+      document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#00ff88;">✓ 已上傳收款QR碼</span>'
+    } else {
+      qrPreview.innerHTML = ''
+      document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#ffaa00;">尚未上傳收款QR碼</span>'
+    }
+    
+    // 显示订单
+    const orders = getOrders().filter(o => o.assignedFighters.includes(fighterId))
+    const ordersList = document.getElementById('fighter-orders-list')
+    if (orders.length === 0) {
+      ordersList.innerHTML = '<p style="color:#aaa;">暫無訂單</p>'
+    } else {
+      ordersList.innerHTML = orders.map(o => {
+        const product = getProducts().find(p => p.id === o.productId)
+        return `
+          <div class="fighter-order-card ${o.status === '已完成' ? 'done' : 'pending'}">
+            <div><strong>訂單號：</strong>${o.id} <strong style="margin-left:1rem;">時間：</strong>${o.time}</div>
+            <div style="margin-top:0.5rem;"><strong>客戶：</strong>${o.customerName} <strong style="margin-left:1rem;">電話：</strong>${o.customerPhone}</div>
+            <div style="margin-top:0.5rem;"><strong>服務：</strong>${product?.name || '未知'} (${product?.type || ''}) <strong style="margin-left:1rem;">價格：</strong><span style="color:#00ff88;">NT$ ${product?.price || 0}</span></div>
+            ${o.customerQR ? `<div style="margin-top:0.5rem;"><strong>客戶QR碼：</strong><br><img src="${o.customerQR}" style="width:100px;height:100px;object-fit:cover;border-radius:4px;margin-top:0.5rem;"></div>` : ''}
+            <div style="margin-top:1rem;">
+              <strong>狀態：</strong><span style="color:${o.status === '已完成' ? '#00ff88' : '#ffaa00'};">${o.status}</span>
+              ${o.status !== '已完成' ? `<button class="btn btn-sm btn-success" style="margin-left:1rem;" onclick="completeOrder(${o.id})">標記完成</button>` : ''}
+            </div>
+          </div>
+        `
+      }).join('')
+    }
+  }
+
+  // 打手上傳收款QR码
+  function handleFighterQRUpload(event) {
+    const file = event.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = function(e) {
+      const img = new Image()
+      img.onload = function() {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        canvas.width = img.width
+        canvas.height = img.height
+        ctx.drawImage(img, 0, 0)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
+        if (qrCode) {
+          const fighters = getFighters()
+          const fighter = fighters.find(f => f.id === currentFighterId)
+          fighter.qrCode = e.target.result
+          saveFighters(fighters)
+          document.getElementById('fighter-qr-preview').innerHTML = `<img src="${e.target.result}" class="qr-image">`
+          document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#00ff88;">✓ QR碼上傳成功</span>'
+          alert('收款QR碼上傳成功！')
+        } else {
+          document.getElementById('fighter-qr-status').innerHTML = '<span style="color:#ff4444;">✗ 未檢測到QR碼，請重新上傳</span>'
+          event.target.value = ''
+        }
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // 完成订单
+  function completeOrder(orderId) {
+    if (!confirm('確認完成此訂單？')) return
+    const orders = getOrders()
+    const order = orders.find(o => o.id === orderId)
+    order.status = '已完成'
+    saveOrders(orders)
+    renderFighterPortal(currentFighterId)
+  }
+
+  function fighterLogout() {
+    currentFighterId = null
+    showView('frontend')
   }
 
   // ===== 前端商品渲染 =====
@@ -326,10 +496,58 @@
 
   function openOrder(productId) {
     showView('order')
-    setTimeout(() => { document.getElementById('order-product').value = productId }, 0)
+    setTimeout(() => { 
+      document.getElementById('order-product').value = productId
+      checkProductType()
+    }, 0)
   }
 
-  // ===== 下單表單 =====
+  // ===== 检查商品类型 =====
+  function checkProductType() {
+    const productId = parseInt(document.getElementById('order-product').value)
+    const product = getProducts().find(p => p.id === productId)
+    currentProductType = product?.type || ''
+    
+    document.getElementById('qr-upload-group').classList.toggle('hidden', currentProductType !== '代打')
+    
+    // 显示打手QR码
+    const fighterQRDisplay = document.getElementById('fighter-qr-display')
+    const selectedFighterId = getOrders().length > 0 ? null : null // 这里需要先选择打手
+    fighterQRDisplay.classList.add('hidden')
+  }
+
+  // ===== 客户QR码上传 =====
+  function handleCustomerQRUpload(event) {
+    const file = event.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = function(e) {
+      const img = new Image()
+      img.onload = function() {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        canvas.width = img.width
+        canvas.height = img.height
+        ctx.drawImage(img, 0, 0)
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
+        if (qrCode) {
+          uploadedCustomerQR = e.target.result
+          document.getElementById('customer-qr-preview').innerHTML = `<img src="${e.target.result}" class="qr-image">`
+          document.getElementById('customer-qr-status').innerHTML = '<span style="color:#00ff88;">✓ QR碼檢測成功</span>'
+        } else {
+          uploadedCustomerQR = null
+          document.getElementById('customer-qr-preview').innerHTML = ''
+          document.getElementById('customer-qr-status').innerHTML = '<span style="color:#ff4444;">✗ 未檢測到QR碼，請重新上傳</span>'
+          event.target.value = ''
+        }
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // ===== 下单表单 =====
   function renderOrderForm() {
     const products = getProducts()
     const fighters = getFighters()
@@ -338,16 +556,22 @@
       `<option value="${p.id}">${p.name} (NT$ ${p.price})</option>`
     ).join('')
     
+    uploadedCustomerQR = null
+    document.getElementById('customer-qr-preview').innerHTML = ''
+    document.getElementById('customer-qr-status').innerHTML = ''
+    
     const availableFighters = fighters.filter(f => f.allowBooking && f.currentBookings < f.maxBookings)
     const fighterOptions = document.getElementById('fighter-options')
-    fighterOptions.innerHTML = availableFighters.length === 0 
-      ? '<p style="color:#aaa;">暂无可预约打手</p>'
-      : availableFighters.map(f => `
+    if (availableFighters.length === 0) {
+      fighterOptions.innerHTML = '<p style="color:#aaa;">暂无可预约打手</p>'
+    } else {
+      fighterOptions.innerHTML = availableFighters.map(f => `
         <div class="fighter-option">
           <input type="checkbox" id="fighter-${f.id}" value="${f.id}" class="fighter-checkbox" onchange="checkFighterQuota(${f.id})">
           <label for="fighter-${f.id}" style="margin:0;">${f.name} <span class="booking-count">(${f.currentBookings}/${f.maxBookings})</span></label>
         </div>
       `).join('')
+    }
     toggleFighterSelect()
   }
 
@@ -373,14 +597,19 @@
     }
   }
 
-  // ===== 提交訂單 =====
+  // ===== 提交订单 =====
   document.getElementById('order-form').addEventListener('submit', function(e) {
     e.preventDefault()
     const productId = parseInt(document.getElementById('order-product').value)
+    const product = getProducts().find(p => p.id === productId)
     const customerName = document.getElementById('customer-name').value
     const customerPhone = document.getElementById('customer-phone').value
     const fighterType = document.getElementById('fighter-type').value
     const fighters = getFighters()
+    
+    if (product.type === '代打' && !uploadedCustomerQR) {
+      return alert('代打商品請上傳QR碼')
+    }
     
     let assignedFighters = []
     if (fighterType === 'random') {
@@ -400,7 +629,17 @@
     }
     
     const orders = getOrders()
-    orders.push({ id: Date.now(), productId, customerName, customerPhone, fighterType, assignedFighters, status: '已付款', time: new Date().toLocaleString() })
+    orders.push({
+      id: Date.now(),
+      productId,
+      customerName,
+      customerPhone,
+      fighterType,
+      assignedFighters,
+      customerQR: uploadedCustomerQR,
+      status: '已付款',
+      time: new Date().toLocaleString()
+    })
     saveOrders(orders)
     
     assignedFighters.forEach(fid => { fighters.find(f => f.id === fid).currentBookings += 1 })
@@ -411,9 +650,8 @@
     this.reset()
   })
 
-  // ===== 後台渲染 =====
+  // ===== 后台渲染 =====
   function renderAdmin() {
-    // 遊戲分類
     const games = getGames()
     document.getElementById('game-admin-list').innerHTML = games.length === 0 
       ? '<p style="color:#aaa;">暂无遊戲分類</p>'
@@ -424,12 +662,9 @@
         </div>
       `).join('')
     
-    // 更新商品表單的遊戲下拉框
     const gameSelect = document.getElementById('new-product-game')
     if (gameSelect) gameSelect.innerHTML = games.map(g => `<option value="${g.id}">${g.name}</option>`).join('')
-    toggleProductType()
 
-    // 打手列表
     const fighters = getFighters()
     document.getElementById('fighter-admin-list').innerHTML = fighters.map(f => `
       <div class="card fighter-item">
@@ -438,13 +673,13 @@
           <div class="fighter-meta" style="margin-top:0.5rem;">
             <span class="badge ${f.allowBooking ? 'badge-allowed' : 'badge-disallowed'}">${f.allowBooking ? '开放预约' : '不开放'}</span>
             <span style="color:#aaa;font-size:0.9rem;">${f.currentBookings}/${f.maxBookings} 人预约</span>
+            ${f.qrCode ? '<span style="color:#00ff88;font-size:0.8rem;">✓ 已上传收款码</span>' : ''}
           </div>
         </div>
         <button class="btn btn-sm btn-warning" onclick="showView('fighter-settings', ${f.id})">详细设置</button>
       </div>
     `).join('')
 
-    // 商品列表
     const products = getProducts()
     document.getElementById('product-admin-list').innerHTML = products.length === 0 
       ? '<p style="color:#aaa;">暂无商品</p>'
@@ -458,14 +693,11 @@
               <p style="color:#aaa;font-size:0.9rem;">${game?.name || '未分類'} | <span class="badge badge-type">${p.type}</span> | NT$ ${p.price}</p>
               <p style="color:#aaa;font-size:0.9rem;">${p.desc || '暂无描述'}</p>
             </div>
-            <div style="display:flex;gap:0.5rem;">
-              <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">刪除</button>
-            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">刪除</button>
           </div>
         `
       }).join('')
 
-    // 訂單列表
     const orders = getOrders()
     document.getElementById('order-admin-list').innerHTML = orders.length === 0 
       ? '<p style="color:#aaa;">暂无订单</p>'
@@ -474,15 +706,16 @@
         const fighterNames = o.assignedFighters.map(fid => getFighters().find(f => f.id === fid)?.name || '未知').join(', ')
         return `
           <div class="order-item">
-            <div><strong>订单号：</strong>${o.id} <strong style="margin-left:1rem;">时间：</strong>${o.time} <strong style="margin-left:1rem;">状态：</strong><span style="color:#00ff88;">${o.status}</span></div>
+            <div><strong>订单号：</strong>${o.id} <strong style="margin-left:1rem;">时间：</strong>${o.time} <strong style="margin-left:1rem;">状态：</strong><span style="color:${o.status === '已完成' ? '#00ff88' : '#ffaa00'};">${o.status}</span></div>
             <div style="margin-top:0.5rem;"><strong>客户：</strong>${o.customerName} <strong style="margin-left:1rem;">电话：</strong>${o.customerPhone}</div>
             <div style="margin-top:0.5rem;"><strong>服务：</strong>${product?.name || '未知'} (${product?.type || ''}) <strong style="margin-left:1rem;">打手：</strong>${fighterNames}</div>
+            ${o.customerQR ? `<div style="margin-top:0.5rem;"><strong>客户QR码：</strong><br><img src="${o.customerQR}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;margin-top:0.5rem;"></div>` : ''}
           </div>
         `
       }).join('')
   }
 
-  // ===== 遊戲分類管理 =====
+  // ===== 游戏分类管理 =====
   document.getElementById('add-game-form').addEventListener('submit', function(e) {
     e.preventDefault()
     const games = getGames()
@@ -500,69 +733,21 @@
     }
   }
 
-  // ===== 商品種類切換 =====
-  function toggleProductType() {
-    const type = document.getElementById('new-product-type').value
-    document.getElementById('daida-image-input').classList.toggle('hidden', type !== '代打')
-    document.getElementById('huohang-image-input').classList.toggle('hidden', type === '代打')
-  }
-
-  // ===== QR碼上傳檢測 =====
-  function handleQRUpload(event) {
-    const file = event.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = function(e) {
-      const img = new Image()
-      img.onload = function() {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx.drawImage(img, 0, 0)
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height)
-        if (qrCode) {
-          uploadedQRBase64 = e.target.result
-          document.getElementById('qrcode-preview').innerHTML = `<img src="${e.target.result}" style="width:100px;height:100px;object-fit:cover;border-radius:4px;">`
-          alert('QR碼檢測成功！')
-        } else {
-          alert('未檢測到QR碼，請上傳包含QR碼的圖片')
-          event.target.value = ''
-          document.getElementById('qrcode-preview').innerHTML = ''
-          uploadedQRBase64 = null
-        }
-      }
-      img.src = e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
-
-  // ===== 新增商品 =====
+  // ===== 商品管理 =====
   document.getElementById('add-product-form').addEventListener('submit', function(e) {
     e.preventDefault()
-    const type = document.getElementById('new-product-type').value
-    let img = ''
-    if (type === '代打') {
-      if (!uploadedQRBase64) return alert('代打商品請上傳QR碼圖片')
-      img = uploadedQRBase64
-    } else {
-      img = document.getElementById('new-product-img').value || ''
-    }
     const products = getProducts()
     products.push({
       id: Date.now(),
       name: document.getElementById('new-product-name').value,
       gameId: parseInt(document.getElementById('new-product-game').value),
-      type: type,
+      type: document.getElementById('new-product-type').value,
       price: parseInt(document.getElementById('new-product-price').value),
-      img: img,
+      img: document.getElementById('new-product-img').value || '',
       desc: document.getElementById('new-product-desc').value
     })
     saveProducts(products)
     this.reset()
-    uploadedQRBase64 = null
-    document.getElementById('qrcode-preview').innerHTML = ''
     renderAdmin()
     renderProducts()
     alert('商品新增成功')
@@ -576,7 +761,7 @@
     }
   }
 
-  // ===== 打手設置 =====
+  // ===== 打手设置 =====
   function openFighterSettings(fighterId) {
     currentFighterId = fighterId
     const fighter = getFighters().find(f => f.id === fighterId)
@@ -596,7 +781,7 @@
     showView('admin')
   }
 
-  // ===== 數據導入導出 =====
+  // ===== 数据导入导出 =====
   function exportData() {
     const data = { games: getGames(), fighters: getFighters(), products: getProducts(), orders: getOrders() }
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'})
